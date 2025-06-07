@@ -1,44 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+  Card, CardContent, CardDescription, CardHeader, CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Pagination } from "@/components/ui/pagination";
-import { mentorAPI } from '../services/api';
-import { Loader2, Plus, Pencil, Trash2, Search, AlertCircle } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { mentorAPI, careerFieldAPI } from '../services/api';
+import { Loader2, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
-import FileUploader from '../components/FileUploader';
 
 interface Mentor {
   _id: string;
@@ -46,233 +19,172 @@ interface Mentor {
   title: string;
   specialization: string;
   bio: string;
-  avatarUrl: string;
-  experience: number;
+  profileImage?: string;
+  careerFields: any[]; // Can be an array of strings (IDs) or objects
+  experienceLevel: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  skills?: string[];
+  teachingStyle: 'practical' | 'theoretical' | 'socratic' | 'coaching' | 'mentoring';
+  communicationStyle: 'direct' | 'supportive' | 'analytical' | 'expressive';
+  manusAIMentorId: string;
   rating: number;
-  status: 'active' | 'inactive';
+  isActive: boolean;
+}
+
+interface CareerField {
+    _id: string;
+    name: string;
 }
 
 const MentorsPage: React.FC = () => {
   const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [careerFields, setCareerFields] = useState<CareerField[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
+  
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
-  const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
-  const [formData, setFormData] = useState<Partial<Mentor>>({
+
+  const initialFormData = {
     name: '',
     title: '',
     specialization: '',
     bio: '',
-    avatarUrl: '',
-    experience: 0,
+    profileImage: '',
+    careerFields: [],
+    experienceLevel: 'expert' as const,
+    skills: [],
+    teachingStyle: 'mentoring' as const,
+    communicationStyle: 'supportive' as const,
+    manusAIMentorId: '',
     rating: 5,
-    status: 'active'
-  });
+    isActive: true,
+  };
+
+  const [formData, setFormData] = useState<Partial<Mentor>>(initialFormData);
+  const [formSkills, setFormSkills] = useState('');
   const [formSubmitting, setFormSubmitting] = useState<boolean>(false);
   const { toast } = useToast();
 
-  const fetchMentors = async (page: number = 1) => {
+  const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await mentorAPI.getAllMentors(page, 10);
-      setMentors(response.data);
-      setTotalPages(Math.ceil(response.total / 10));
-      setCurrentPage(page);
+        const [mentorRes, careerFieldRes] = await Promise.all([
+            mentorAPI.getAllMentors(currentPage, 10),
+            careerFieldAPI.getAll()
+        ]);
+
+        if (mentorRes && Array.isArray(mentorRes.data) && mentorRes.pagination) {
+            setMentors(mentorRes.data);
+            setTotalPages(Math.ceil(mentorRes.pagination.total / mentorRes.pagination.limit));
+        } else {
+            setMentors([]);
+            setTotalPages(1);
+        }
+
+        if (Array.isArray(careerFieldRes)) {
+            setCareerFields(careerFieldRes);
+        } else {
+            setCareerFields([]);
+        }
+
     } catch (err: any) {
-      setError('Failed to fetch mentors. Please try again.');
-      console.error('Error fetching mentors:', err);
-      toast({
-        title: "Error",
-        description: err.response?.data?.message || "Failed to fetch mentors",
-        variant: "destructive",
-      });
+      setError('Failed to fetch page data. Please try again.');
+      setMentors([]);
+      setCareerFields([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMentors();
-  }, []);
-
-  const handleSearch = () => {
-    // In a real implementation, this would call an API with search parameters
-    fetchMentors(1);
-  };
-
-  const handlePageChange = (page: number) => {
-    fetchMentors(page);
-  };
+    fetchData();
+  }, [currentPage]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+  const handleSelectChange = (name: keyof Mentor, value: string | boolean) => {
+    setFormData({ ...formData, [name]: value });
   };
-
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: parseInt(value, 10)
-    });
-  };
-
-  const handleFileUpload = (fileUrl: string) => {
-    setFormData({
-      ...formData,
-      avatarUrl: fileUrl
-    });
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      title: '',
-      specialization: '',
-      bio: '',
-      avatarUrl: '',
-      experience: 0,
-      rating: 5,
-      status: 'active'
-    });
-  };
-
+  
   const openAddDialog = () => {
-    resetForm();
-    setIsAddDialogOpen(true);
+    setSelectedMentor(null);
+    setFormData({...initialFormData, careerField: careerFields[0]?._id});
+    setFormSkills('');
+    setIsModalOpen(true);
   };
 
   const openEditDialog = (mentor: Mentor) => {
     setSelectedMentor(mentor);
-    setFormData({
-      name: mentor.name,
-      title: mentor.title,
-      specialization: mentor.specialization,
-      bio: mentor.bio,
-      avatarUrl: mentor.avatarUrl,
-      experience: mentor.experience,
-      rating: mentor.rating,
-      status: mentor.status
+    setFormData({ 
+        name: mentor.name || '',
+        title: mentor.title || '',
+        specialization: mentor.specialization || '',
+        bio: mentor.bio || '',
+        profileImage: mentor.profileImage || '',
+        // Handle both populated objects and simple IDs
+        careerField: Array.isArray(mentor.careerFields) && mentor.careerFields.length > 0
+            ? (typeof mentor.careerFields[0] === 'object' ? mentor.careerFields[0]?._id : mentor.careerFields[0])
+            : '',
+        experienceLevel: mentor.experienceLevel || 'expert',
+        teachingStyle: mentor.teachingStyle || 'mentoring',
+        communicationStyle: mentor.communicationStyle || 'supportive',
+        manusAIMentorId: mentor.manusAIMentorId || '',
+        rating: mentor.rating || 5,
+        isActive: typeof mentor.isActive === 'boolean' ? mentor.isActive : true,
     });
-    setIsEditDialogOpen(true);
+    setFormSkills(Array.isArray(mentor.skills) ? mentor.skills.join(', ') : '');
+    setIsModalOpen(true);
   };
-
-  const openDeleteDialog = (mentor: Mentor) => {
-    setSelectedMentor(mentor);
-    setIsDeleteDialogOpen(true);
+  
+  const handleDeleteMentor = async (mentorId: string) => {
+    if(window.confirm('Are you sure you want to delete this mentor?')){
+        try {
+            await mentorAPI.deleteMentor(mentorId);
+            toast({ title: "Success", description: "Mentor deleted successfully" });
+            fetchData();
+        } catch (err: any) {
+            toast({ title: "Error", description: "Failed to delete mentor.", variant: "destructive" });
+        }
+    }
   };
-
-  const validateForm = () => {
-    if (!formData.name?.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Mentor name is required",
-        variant: "destructive",
-      });
-      return false;
+  
+  const handleSubmit = async () => {
+    const { name, manusAIMentorId, careerField, bio } = formData;
+    if (!name?.trim() || !manusAIMentorId?.trim() || !careerField || !bio?.trim()) {
+      toast({ title: "Validation Error", description: "Name, Manus AI ID, Bio, and Career Field are required.", variant: "destructive" });
+      return;
     }
-    if (!formData.title?.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Mentor title is required",
-        variant: "destructive",
-      });
-      return false;
-    }
-    if (!formData.specialization?.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Specialization is required",
-        variant: "destructive",
-      });
-      return false;
-    }
-    return true;
-  };
-
-  const handleAddMentor = async () => {
-    if (!validateForm()) return;
-    
     setFormSubmitting(true);
-    try {
-      await mentorAPI.createMentor(formData);
-      setIsAddDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Mentor added successfully",
-      });
-      fetchMentors(currentPage);
-    } catch (err: any) {
-      console.error('Error adding mentor:', err);
-      toast({
-        title: "Error",
-        description: err.response?.data?.message || "Failed to add mentor. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setFormSubmitting(false);
-    }
-  };
-
-  const handleUpdateMentor = async () => {
-    if (!selectedMentor || !validateForm()) return;
     
-    setFormSubmitting(true);
-    try {
-      await mentorAPI.updateMentor(selectedMentor._id, formData);
-      setIsEditDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Mentor updated successfully",
-      });
-      fetchMentors(currentPage);
-    } catch (err: any) {
-      console.error('Error updating mentor:', err);
-      toast({
-        title: "Error",
-        description: err.response?.data?.message || "Failed to update mentor. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setFormSubmitting(false);
-    }
-  };
-
-  const handleDeleteMentor = async () => {
-    if (!selectedMentor) return;
+    const payload = {
+        ...formData,
+        experience: Number(formData.experience) || 0,
+        rating: Number(formData.rating) || 5,
+        careerFields: formData.careerField ? [formData.careerField] : [],
+        skills: formSkills.split(',').map(skill => skill.trim()).filter(Boolean),
+    };
     
-    setFormSubmitting(true);
+    // Remove the singular careerField property before sending
+    delete payload.careerField;
+
     try {
-      await mentorAPI.deleteMentor(selectedMentor._id);
-      setIsDeleteDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Mentor deleted successfully",
-      });
-      fetchMentors(currentPage);
+      if (selectedMentor) {
+        await mentorAPI.updateMentor(selectedMentor._id, payload);
+        toast({ title: "Success", description: "Mentor updated successfully" });
+      } else {
+        await mentorAPI.createMentor(payload);
+        toast({ title: "Success", description: "Mentor added successfully" });
+      }
+      setIsModalOpen(false);
+      fetchData();
     } catch (err: any) {
-      console.error('Error deleting mentor:', err);
-      toast({
-        title: "Error",
-        description: err.response?.data?.message || "Failed to delete mentor. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: err.response?.data?.message || "Failed to save mentor.", variant: "destructive" });
     } finally {
       setFormSubmitting(false);
     }
@@ -283,375 +195,83 @@ const MentorsPage: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>AI Mentors Management</CardTitle>
-          <CardDescription>
-            Manage AI mentors for the TimeTravelers platform
-          </CardDescription>
+          <CardDescription>Manage AI mentors for the TimeTravelers platform</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <div className="flex w-full md:w-auto gap-2">
-              <Input
-                placeholder="Search mentors..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full md:w-80"
-              />
-              <Button onClick={handleSearch} variant="outline">
-                <Search className="h-4 w-4 mr-2" />
-                Search
-              </Button>
-            </div>
+          <div className="flex justify-between items-center mb-6">
             <Button onClick={openAddDialog}>
               <Plus className="h-4 w-4 mr-2" />
               Add Mentor
             </Button>
           </div>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <span className="ml-2">Loading mentors...</span>
-            </div>
-          ) : error ? (
-            <div className="bg-red-50 text-red-500 p-4 rounded-md flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2" />
-              {error}
-              <Button 
-                variant="outline" 
-                className="ml-4" 
-                onClick={() => fetchMentors(currentPage)}
-              >
-                Retry
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="rounded-md border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Specialization</TableHead>
-                      <TableHead className="hidden md:table-cell">Experience</TableHead>
-                      <TableHead className="hidden md:table-cell">Rating</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+          <div className="rounded-md border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                    <TableRow><TableCell colSpan={4} className="text-center py-8"><Loader2 className="h-8 w-8 animate-spin mx-auto" /></TableCell></TableRow>
+                ) : error ? (
+                    <TableRow><TableCell colSpan={4} className="text-center text-red-500 py-8">{error}</TableCell></TableRow>
+                ) : mentors.length === 0 ? (
+                  <TableRow><TableCell colSpan={4} className="text-center py-8">No mentors found</TableCell></TableRow>
+                ) : (
+                  mentors.map((mentor) => (
+                    <TableRow key={mentor._id}>
+                      <TableCell className="font-medium">{mentor.name}</TableCell>
+                      <TableCell>{mentor.title}</TableCell>
+                      <TableCell><span className={`px-2 py-1 rounded-full text-xs ${mentor.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{mentor.isActive ? 'Active' : 'Inactive'}</span></TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(mentor)} className="mr-1"><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteMentor(mentor._id)}><Trash2 className="h-4 w-4" /></Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {mentors.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8">
-                          No mentors found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      mentors.map((mentor) => (
-                        <TableRow key={mentor._id}>
-                          <TableCell className="font-medium">{mentor.name}</TableCell>
-                          <TableCell>{mentor.title}</TableCell>
-                          <TableCell>{mentor.specialization}</TableCell>
-                          <TableCell className="hidden md:table-cell">{mentor.experience} years</TableCell>
-                          <TableCell className="hidden md:table-cell">{mentor.rating}/5</TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              mentor.status === 'active' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {mentor.status}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => openEditDialog(mentor)}
-                              className="mr-1"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => openDeleteDialog(mentor)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-4">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              )}
-            </>
-          )}
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Add Mentor Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Add New Mentor</DialogTitle>
-            <DialogDescription>
-              Create a new AI mentor for the TimeTravelers platform
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <DialogHeader><DialogTitle>{selectedMentor ? 'Edit Mentor' : 'Add New Mentor'}</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter mentor name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  placeholder="Enter mentor title"
-                />
-              </div>
+                <div className="space-y-2"><Label htmlFor="name">Name *</Label><Input id="name" name="name" value={formData.name} onChange={handleInputChange} /></div>
+                <div className="space-y-2"><Label htmlFor="title">Title *</Label><Input id="title" name="title" value={formData.title} onChange={handleInputChange} /></div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="specialization">Specialization *</Label>
-              <Input
-                id="specialization"
-                name="specialization"
-                value={formData.specialization}
-                onChange={handleInputChange}
-                placeholder="Enter mentor specialization"
-              />
+            
+            <div className="space-y-2"><Label htmlFor="careerField">Career Field *</Label><Select value={formData.careerField} onValueChange={(value) => handleSelectChange('careerField', value)}><SelectTrigger id="careerField"><SelectValue placeholder="Select a field..." /></SelectTrigger><SelectContent>{careerFields.map(field => (<SelectItem key={field._id} value={field._id}>{field.name}</SelectItem>))}</SelectContent></Select></div>
+            
+            <div className="space-y-2"><Label htmlFor="specialization">Specialization *</Label><Input id="specialization" name="specialization" value={formData.specialization} onChange={handleInputChange} /></div>
+            <div className="space-y-2"><Label htmlFor="manusAIMentorId">Manus AI Mentor ID *</Label><Input id="manusAIMentorId" name="manusAIMentorId" value={formData.manusAIMentorId} onChange={handleInputChange} /></div>
+            <div className="space-y-2"><Label htmlFor="bio">Bio *</Label><Textarea id="bio" name="bio" value={formData.bio} onChange={handleInputChange} /></div>
+            <div className="space-y-2"><Label htmlFor="skills">Skills (comma-separated)</Label><Input id="skills" value={formSkills} onChange={(e) => setFormSkills(e.target.value)} /></div>
+            <div className="space-y-2"><Label htmlFor="profileImage">Profile Image URL</Label><Input id="profileImage" name="profileImage" value={formData.profileImage} onChange={handleInputChange} /></div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2"><Label htmlFor="experienceLevel">Experience Level</Label><Select value={formData.experienceLevel} onValueChange={(value) => handleSelectChange('experienceLevel', value)}><SelectTrigger id="experienceLevel"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="beginner">Beginner</SelectItem><SelectItem value="intermediate">Intermediate</SelectItem><SelectItem value="advanced">Advanced</SelectItem><SelectItem value="expert">Expert</SelectItem></SelectContent></Select></div>
+                <div className="space-y-2"><Label htmlFor="teachingStyle">Teaching Style</Label><Select value={formData.teachingStyle} onValueChange={(value) => handleSelectChange('teachingStyle', value)}><SelectTrigger id="teachingStyle"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="practical">Practical</SelectItem><SelectItem value="theoretical">Theoretical</SelectItem><SelectItem value="socratic">Socratic</SelectItem><SelectItem value="coaching">Coaching</SelectItem><SelectItem value="mentoring">Mentoring</SelectItem></SelectContent></Select></div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                name="bio"
-                value={formData.bio}
-                onChange={handleInputChange}
-                placeholder="Enter mentor bio"
-                rows={4}
-              />
-            </div>
-            <div className="space-y-2">
-              <FileUploader
-                endpoint="/api/v1/upload/avatar"
-                onUploadComplete={handleFileUpload}
-                acceptedFileTypes="image/*"
-                maxSizeMB={2}
-                label="Avatar Image"
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="experience">Experience (years)</Label>
-                <Input
-                  id="experience"
-                  name="experience"
-                  type="number"
-                  value={formData.experience}
-                  onChange={handleNumberChange}
-                  min={0}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="rating">Rating</Label>
-                <Input
-                  id="rating"
-                  name="rating"
-                  type="number"
-                  value={formData.rating}
-                  onChange={handleNumberChange}
-                  min={1}
-                  max={5}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(value) => handleSelectChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2"><Label htmlFor="communicationStyle">Communication Style</Label><Select value={formData.communicationStyle} onValueChange={(value) => handleSelectChange('communicationStyle', value)}><SelectTrigger id="communicationStyle"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="direct">Direct</SelectItem><SelectItem value="supportive">Supportive</SelectItem><SelectItem value="analytical">Analytical</SelectItem><SelectItem value="expressive">Expressive</SelectItem></SelectContent></Select></div>
+              <div className="space-y-2"><Label htmlFor="isActive">Status</Label><Select value={String(formData.isActive)} onValueChange={(value) => handleSelectChange('isActive', value === 'true')}><SelectTrigger id="isActive"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="true">Active</SelectItem><SelectItem value="false">Inactive</SelectItem></SelectContent></Select></div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddMentor} disabled={formSubmitting}>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={formSubmitting}>
               {formSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Add Mentor
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Mentor Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit Mentor</DialogTitle>
-            <DialogDescription>
-              Update mentor information
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Name *</Label>
-                <Input
-                  id="edit-name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter mentor name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-title">Title *</Label>
-                <Input
-                  id="edit-title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  placeholder="Enter mentor title"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-specialization">Specialization *</Label>
-              <Input
-                id="edit-specialization"
-                name="specialization"
-                value={formData.specialization}
-                onChange={handleInputChange}
-                placeholder="Enter mentor specialization"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-bio">Bio</Label>
-              <Textarea
-                id="edit-bio"
-                name="bio"
-                value={formData.bio}
-                onChange={handleInputChange}
-                placeholder="Enter mentor bio"
-                rows={4}
-              />
-            </div>
-            <div className="space-y-2">
-              <FileUploader
-                endpoint="/api/v1/upload/avatar"
-                onUploadComplete={handleFileUpload}
-                acceptedFileTypes="image/*"
-                maxSizeMB={2}
-                label="Avatar Image"
-                initialFileUrl={formData.avatarUrl}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-experience">Experience (years)</Label>
-                <Input
-                  id="edit-experience"
-                  name="experience"
-                  type="number"
-                  value={formData.experience}
-                  onChange={handleNumberChange}
-                  min={0}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-rating">Rating</Label>
-                <Input
-                  id="edit-rating"
-                  name="rating"
-                  type="number"
-                  value={formData.rating}
-                  onChange={handleNumberChange}
-                  min={1}
-                  max={5}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-status">Status</Label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(value) => handleSelectChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdateMentor} disabled={formSubmitting}>
-              {formSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Update Mentor
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Mentor Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete the mentor "{selectedMentor?.name}"? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteMentor}
-              disabled={formSubmitting}
-            >
-              {formSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete
+              {selectedMentor ? 'Update Mentor' : 'Add Mentor'}
             </Button>
           </DialogFooter>
         </DialogContent>

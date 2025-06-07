@@ -8,9 +8,10 @@ import {
   UserCheck, 
   BarChart2, 
   Settings,
-  LogOut
+  LogOut,
+  Briefcase
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -89,6 +90,15 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, toggleCollapse }) => {
               >
                 <BookOpen className="h-5 w-5 text-purple-400" />
                 {!collapsed && <span className="ml-3">Protocols</span>}
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/admin/career-fields"
+                className="flex items-center px-4 py-3 hover:bg-gray-800 transition-colors"
+              >
+                <Briefcase className="h-5 w-5 text-purple-400" />
+                {!collapsed && <span className="ml-3">Career Fields</span>}
               </Link>
             </li>
             <li>

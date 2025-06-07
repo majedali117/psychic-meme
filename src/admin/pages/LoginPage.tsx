@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+// FIXED: Import useAuth from the new hooks file
+import { useAuth } from '../hooks/useAuth';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = React.useState('');
@@ -21,8 +22,10 @@ const LoginPage: React.FC = () => {
     
     try {
       await login(email, password);
+      // Navigate on success is handled by the useEffect above
     } catch (err) {
       console.error('Login error:', err);
+      // The error state is now automatically set in the context
     } finally {
       setIsSubmitting(false);
     }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import { Toaster } from "@/components/ui/toaster";
 
 const AdminLayout: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -30,6 +31,7 @@ const AdminLayout: React.FC = () => {
           &copy; {new Date().getFullYear()} TimeTravelers Admin Panel
         </footer>
       </div>
+      <Toaster />
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import AdminRoutes from './admin/AdminRoutes';
 
 // Import existing App components
@@ -14,21 +14,14 @@ import FAQ from './components/FAQ';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 
-function App() {
+// This component will render the main marketing site pages
+const MainSite = () => {
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
-
-  // Scroll to top on route change
+  
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location]);
 
-  // Render admin routes if path starts with /admin
-  if (isAdminRoute) {
-    return <AdminRoutes />;
-  }
-
-  // Otherwise render the main website
   return (
     <div className="App">
       <Hero />
@@ -42,6 +35,21 @@ function App() {
       <Contact />
       <Footer />
     </div>
+  );
+};
+
+function App() {
+  return (
+    <Routes>
+      {/* 
+        This is the key: All paths starting with /admin/ are now handled by the AdminRoutes component.
+        The "*" is a wildcard that allows AdminRoutes to manage its own sub-routes.
+      */}
+      <Route path="/admin/*" element={<AdminRoutes />} />
+      
+      {/* All other paths fall back to the main marketing site */}
+      <Route path="*" element={<MainSite />} />
+    </Routes>
   );
 }
 

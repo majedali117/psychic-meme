@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardAPI, widgetAPI } from '../services/api';
-import { LayoutGrid, LayoutList, Plus, Settings, Trash2, Save } from 'lucide-react';
+import { LayoutGrid, LayoutList, Plus, Settings, Trash2, Save, Users, Target, BookOpen, UserCheck, Activity } from 'lucide-react';
 
 interface Widget {
   id: string;

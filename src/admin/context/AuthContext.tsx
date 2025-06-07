@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authAPI } from '../services/api';
-
-interface AuthContextType {
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { authAPI, userAPI } from '../services/api';
+// Define the interface for the context value
+export interface AuthContextType {
   isAuthenticated: boolean;
   user: any | null;
   loading: boolean;
@@ -10,20 +10,15 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create and export the context
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
+// Define the provider props
 interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Create and export the provider component
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<any | null>(null);
@@ -31,16 +26,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const token = localStorage.getItem('admin_token');
-    const userData = localStorage.getItem('admin_user');
+    const verifyAuth = async () => {
+      const token = localStorage.getItem('admin_token');
+      if (token) {
+        try {
+          const response = await userAPI.getProfile();
+          if (response.data.role === 'admin') {
+            setIsAuthenticated(true);
+            setUser(response.data);
+            localStorage.setItem('admin_user', JSON.stringify(response.data));
+          } else {
+            throw new Error('Unauthorized: Admin access required');
+          }
+        } catch (e) {
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
     
-    if (token && userData) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(userData));
-    }
-    
-    setLoading(false);
+    verifyAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -50,7 +58,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       const response = await authAPI.login(email, password);
       
-      // Check if user has admin role
       if (response.user.role !== 'admin') {
         throw new Error('Unauthorized: Admin access required');
       }
@@ -61,9 +68,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(true);
       setUser(response.user);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Login failed');
+      setError(err.response?.data?.error?.message || err.message || 'Login failed');
       setIsAuthenticated(false);
       setUser(null);
+      throw err; // Re-throw the error so the component can catch it
     } finally {
       setLoading(false);
     }
