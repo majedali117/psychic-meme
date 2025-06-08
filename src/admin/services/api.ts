@@ -219,7 +219,7 @@ export const mentorAPI = {
     });
     const rawData = response.data;
 
-    return { data: rawData.mentorData, pagination: rawData.pagination, };
+    return { data: rawData.mentors, pagination: rawData.pagination, };
   },
   getMentor: async (id: string) => {
     const response = await api.get(`/mentors/${id}`);

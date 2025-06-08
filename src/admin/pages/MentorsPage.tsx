@@ -10,23 +10,30 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mentorAPI, careerFieldAPI } from '../services/api';
-import { Loader2, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 
+// FIXED: Updated interface to match the complete AIMentor model from the provided JSON
 interface Mentor {
   _id: string;
   name: string;
-  title: string;
   specialization: string;
   bio: string;
   profileImage?: string;
-  careerFields: any[]; // Can be an array of strings (IDs) or objects
+  careerFields: any[];
   experienceLevel: 'beginner' | 'intermediate' | 'advanced' | 'expert';
   skills?: string[];
+  tags?: string[];
+  languages?: string[];
+  availability?: string;
   teachingStyle: 'practical' | 'theoretical' | 'socratic' | 'coaching' | 'mentoring';
   communicationStyle: 'direct' | 'supportive' | 'analytical' | 'expressive';
+  geminiMentorId: string; // Corrected field name
   manusAIMentorId: string;
+  manus: string; // Corrected field name
   rating: number;
+  reviewCount: number;
+  sessionCount: number;
   isActive: boolean;
 }
 
@@ -42,21 +49,22 @@ const MentorsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
+  const [expandedMentorId, setExpandedMentorId] = useState<string | null>(null);
   
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-
-  const initialFormData = {
+  const initialFormData: Partial<Mentor> = {
     name: '',
-    title: '',
     specialization: '',
     bio: '',
     profileImage: '',
     careerFields: [],
-    experienceLevel: 'expert' as const,
+    experienceLevel: 'expert',
     skills: [],
-    teachingStyle: 'mentoring' as const,
-    communicationStyle: 'supportive' as const,
+    tags: [],
+    languages: [],
+    availability: 'always',
+    teachingStyle: 'mentoring',
+    communicationStyle: 'supportive',
+    geminiMentorId: '',
     manusAIMentorId: '',
     rating: 5,
     isActive: true,
@@ -64,6 +72,8 @@ const MentorsPage: React.FC = () => {
 
   const [formData, setFormData] = useState<Partial<Mentor>>(initialFormData);
   const [formSkills, setFormSkills] = useState('');
+  const [formTags, setFormTags] = useState('');
+  const [formLanguages, setFormLanguages] = useState('');
   const [formSubmitting, setFormSubmitting] = useState<boolean>(false);
   const { toast } = useToast();
 
@@ -71,29 +81,18 @@ const MentorsPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
+      console.log('asadad');
         const [mentorRes, careerFieldRes] = await Promise.all([
-            mentorAPI.getAllMentors(currentPage, 10),
+            mentorAPI.getAllMentors(),
             careerFieldAPI.getAll()
         ]);
-
-        if (mentorRes && Array.isArray(mentorRes.data) && mentorRes.pagination) {
-            setMentors(mentorRes.data);
-            setTotalPages(Math.ceil(mentorRes.pagination.total / mentorRes.pagination.limit));
-        } else {
-            setMentors([]);
-            setTotalPages(1);
-        }
-
-        if (Array.isArray(careerFieldRes)) {
-            setCareerFields(careerFieldRes);
-        } else {
-            setCareerFields([]);
-        }
+        
+        console.log(mentorRes.data);
+        if (mentorRes && Array.isArray(mentorRes.data)) setMentors(mentorRes.data);
+        if (Array.isArray(careerFieldRes)) setCareerFields(careerFieldRes);
 
     } catch (err: any) {
       setError('Failed to fetch page data. Please try again.');
-      setMentors([]);
-      setCareerFields([]);
     } finally {
       setLoading(false);
     }
@@ -101,7 +100,7 @@ const MentorsPage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-  }, [currentPage]);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -116,29 +115,21 @@ const MentorsPage: React.FC = () => {
     setSelectedMentor(null);
     setFormData({...initialFormData, careerField: careerFields[0]?._id});
     setFormSkills('');
+    setFormTags('');
+    setFormLanguages('');
     setIsModalOpen(true);
   };
 
   const openEditDialog = (mentor: Mentor) => {
     setSelectedMentor(mentor);
     setFormData({ 
-        name: mentor.name || '',
-        title: mentor.title || '',
-        specialization: mentor.specialization || '',
-        bio: mentor.bio || '',
-        profileImage: mentor.profileImage || '',
-        // Handle both populated objects and simple IDs
-        careerField: Array.isArray(mentor.careerFields) && mentor.careerFields.length > 0
-            ? (typeof mentor.careerFields[0] === 'object' ? mentor.careerFields[0]?._id : mentor.careerFields[0])
-            : '',
-        experienceLevel: mentor.experienceLevel || 'expert',
-        teachingStyle: mentor.teachingStyle || 'mentoring',
-        communicationStyle: mentor.communicationStyle || 'supportive',
-        manusAIMentorId: mentor.manusAIMentorId || '',
-        rating: mentor.rating || 5,
-        isActive: typeof mentor.isActive === 'boolean' ? mentor.isActive : true,
+        ...initialFormData,
+        ...mentor,
+        careerField: Array.isArray(mentor.careerFields) ? mentor.careerFields[0]?._id : mentor.careerFields,
     });
     setFormSkills(Array.isArray(mentor.skills) ? mentor.skills.join(', ') : '');
+    setFormTags(Array.isArray(mentor.tags) ? mentor.tags.join(', ') : '');
+    setFormLanguages(Array.isArray(mentor.languages) ? mentor.languages.join(', ') : '');
     setIsModalOpen(true);
   };
   
@@ -155,22 +146,22 @@ const MentorsPage: React.FC = () => {
   };
   
   const handleSubmit = async () => {
-    const { name, manusAIMentorId, careerField, bio } = formData;
-    if (!name?.trim() || !manusAIMentorId?.trim() || !careerField || !bio?.trim()) {
-      toast({ title: "Validation Error", description: "Name, Manus AI ID, Bio, and Career Field are required.", variant: "destructive" });
+    const { name, geminiMentorId, careerField, bio, specialization } = formData;
+    if (!name?.trim() || !geminiMentorId?.trim() || !careerField || !bio?.trim() || !specialization?.trim()) {
+      toast({ title: "Validation Error", description: "All fields marked with * are required.", variant: "destructive" });
       return;
     }
     setFormSubmitting(true);
     
+    // FIXED: Construct a complete payload matching the schema
     const payload = {
         ...formData,
-        experience: Number(formData.experience) || 0,
         rating: Number(formData.rating) || 5,
         careerFields: formData.careerField ? [formData.careerField] : [],
         skills: formSkills.split(',').map(skill => skill.trim()).filter(Boolean),
+        tags: formTags.split(',').map(tag => tag.trim()).filter(Boolean),
+        languages: formLanguages.split(',').map(lang => lang.trim()).filter(Boolean),
     };
-    
-    // Remove the singular careerField property before sending
     delete payload.careerField;
 
     try {
@@ -198,42 +189,43 @@ const MentorsPage: React.FC = () => {
           <CardDescription>Manage AI mentors for the TimeTravelers platform</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between items-center mb-6">
-            <Button onClick={openAddDialog}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Mentor
-            </Button>
-          </div>
-          <div className="rounded-md border overflow-hidden">
+          <div className="flex justify-between items-center mb-6"><Button onClick={openAddDialog}><Plus className="h-4 w-4 mr-2" />Add Mentor</Button></div>
+          <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Title</TableHead>
+                  <TableHead>Specialization</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-8"><Loader2 className="h-8 w-8 animate-spin mx-auto" /></TableCell></TableRow>
-                ) : error ? (
-                    <TableRow><TableCell colSpan={4} className="text-center text-red-500 py-8">{error}</TableCell></TableRow>
-                ) : mentors.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8">No mentors found</TableCell></TableRow>
-                ) : (
-                  mentors.map((mentor) => (
-                    <TableRow key={mentor._id}>
-                      <TableCell className="font-medium">{mentor.name}</TableCell>
-                      <TableCell>{mentor.title}</TableCell>
-                      <TableCell><span className={`px-2 py-1 rounded-full text-xs ${mentor.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{mentor.isActive ? 'Active' : 'Inactive'}</span></TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(mentor)} className="mr-1"><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteMentor(mentor._id)}><Trash2 className="h-4 w-4" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                {loading ? <TableRow><TableCell colSpan={4} className="text-center py-8"><Loader2 className="h-8 w-8 animate-spin mx-auto" /></TableCell></TableRow>
+                : error ? <TableRow><TableCell colSpan={4} className="text-center text-red-500 py-8">{error}</TableCell></TableRow>
+                : mentors.map((mentor) => (
+                    <React.Fragment key={mentor._id}>
+                        <TableRow className="cursor-pointer" onClick={() => setExpandedMentorId(expandedMentorId === mentor._id ? null : mentor._id)}>
+                            <TableCell className="font-medium flex items-center">{mentor.name} <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${expandedMentorId === mentor._id ? 'rotate-180' : ''}`} /></TableCell>
+                            <TableCell>{mentor.specialization}</TableCell>
+                            <TableCell><span className={`px-2 py-1 rounded-full text-xs ${mentor.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{mentor.isActive ? 'Active' : 'Inactive'}</span></TableCell>
+                            <TableCell className="text-right">
+                                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openEditDialog(mentor);}}><Pencil className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteMentor(mentor._id);}}><Trash2 className="h-4 w-4" /></Button>
+                            </TableCell>
+                        </TableRow>
+                        {expandedMentorId === mentor._id && (
+                            <TableRow className="bg-gray-800/50">
+                                <TableCell colSpan={4} className="p-4 space-y-2">
+                                    <p><strong className="text-gray-300">Bio:</strong> {mentor.bio}</p>
+                                    <p><strong className="text-gray-300">Skills:</strong> {mentor.skills?.join(', ') || 'N/A'}</p>
+                                    <p><strong className="text-gray-300">Rating:</strong> {mentor.rating} ({mentor.reviewCount} reviews)</p>
+                                    <p><strong className="text-gray-300">Gemini ID:</strong> {mentor.geminiMentorId}</p>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </React.Fragment>
+                ))}
               </TableBody>
             </Table>
           </div>
@@ -245,26 +237,26 @@ const MentorsPage: React.FC = () => {
           <DialogHeader><DialogTitle>{selectedMentor ? 'Edit Mentor' : 'Add New Mentor'}</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2"><Label htmlFor="name">Name *</Label><Input id="name" name="name" value={formData.name} onChange={handleInputChange} /></div>
-                <div className="space-y-2"><Label htmlFor="title">Title *</Label><Input id="title" name="title" value={formData.title} onChange={handleInputChange} /></div>
+              <div className="space-y-2"><Label htmlFor="name">Name *</Label><Input id="name" name="name" value={formData.name} onChange={handleInputChange} /></div>
+              <div className="space-y-2"><Label htmlFor="title">Title</Label><Input id="title" name="title" value={formData.title} onChange={handleInputChange} /></div>
             </div>
-            
             <div className="space-y-2"><Label htmlFor="careerField">Career Field *</Label><Select value={formData.careerField} onValueChange={(value) => handleSelectChange('careerField', value)}><SelectTrigger id="careerField"><SelectValue placeholder="Select a field..." /></SelectTrigger><SelectContent>{careerFields.map(field => (<SelectItem key={field._id} value={field._id}>{field.name}</SelectItem>))}</SelectContent></Select></div>
-            
             <div className="space-y-2"><Label htmlFor="specialization">Specialization *</Label><Input id="specialization" name="specialization" value={formData.specialization} onChange={handleInputChange} /></div>
-            <div className="space-y-2"><Label htmlFor="manusAIMentorId">Manus AI Mentor ID *</Label><Input id="manusAIMentorId" name="manusAIMentorId" value={formData.manusAIMentorId} onChange={handleInputChange} /></div>
+            {/* FIXED: Renamed to geminiMentorId */}
+            <div className="space-y-2"><Label htmlFor="geminiMentorId">Gemini AI Mentor ID *</Label><Input id="geminiMentorId" name="geminiMentorId" value={formData.geminiMentorId} onChange={handleInputChange} /></div>
             <div className="space-y-2"><Label htmlFor="bio">Bio *</Label><Textarea id="bio" name="bio" value={formData.bio} onChange={handleInputChange} /></div>
             <div className="space-y-2"><Label htmlFor="skills">Skills (comma-separated)</Label><Input id="skills" value={formSkills} onChange={(e) => setFormSkills(e.target.value)} /></div>
+            {/* ADDED: New required fields */}
+            <div className="space-y-2"><Label htmlFor="tags">Tags (comma-separated)</Label><Input id="tags" value={formTags} onChange={(e) => setFormTags(e.target.value)} /></div>
+            <div className="space-y-2"><Label htmlFor="languages">Languages (comma-separated)</Label><Input id="languages" value={formLanguages} onChange={(e) => setFormLanguages(e.target.value)} /></div>
             <div className="space-y-2"><Label htmlFor="profileImage">Profile Image URL</Label><Input id="profileImage" name="profileImage" value={formData.profileImage} onChange={handleInputChange} /></div>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2"><Label htmlFor="experienceLevel">Experience Level</Label><Select value={formData.experienceLevel} onValueChange={(value) => handleSelectChange('experienceLevel', value)}><SelectTrigger id="experienceLevel"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="beginner">Beginner</SelectItem><SelectItem value="intermediate">Intermediate</SelectItem><SelectItem value="advanced">Advanced</SelectItem><SelectItem value="expert">Expert</SelectItem></SelectContent></Select></div>
-                <div className="space-y-2"><Label htmlFor="teachingStyle">Teaching Style</Label><Select value={formData.teachingStyle} onValueChange={(value) => handleSelectChange('teachingStyle', value)}><SelectTrigger id="teachingStyle"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="practical">Practical</SelectItem><SelectItem value="theoretical">Theoretical</SelectItem><SelectItem value="socratic">Socratic</SelectItem><SelectItem value="coaching">Coaching</SelectItem><SelectItem value="mentoring">Mentoring</SelectItem></SelectContent></Select></div>
+              <div className="space-y-2"><Label htmlFor="experienceLevel">Experience Level</Label><Select value={formData.experienceLevel} onValueChange={(value) => handleSelectChange('experienceLevel', value)}><SelectTrigger id="experienceLevel"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="beginner">Beginner</SelectItem><SelectItem value="intermediate">Intermediate</SelectItem><SelectItem value="advanced">Advanced</SelectItem><SelectItem value="expert">Expert</SelectItem></SelectContent></Select></div>
+              <div className="space-y-2"><Label htmlFor="teachingStyle">Teaching Style</Label><Select value={formData.teachingStyle} onValueChange={(value) => handleSelectChange('teachingStyle', value)}><SelectTrigger id="teachingStyle"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="practical">Practical</SelectItem><SelectItem value="theoretical">Theoretical</SelectItem><SelectItem value="socratic">Socratic</SelectItem><SelectItem value="coaching">Coaching</SelectItem><SelectItem value="mentoring">Mentoring</SelectItem></SelectContent></Select></div>
             </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2"><Label htmlFor="communicationStyle">Communication Style</Label><Select value={formData.communicationStyle} onValueChange={(value) => handleSelectChange('communicationStyle', value)}><SelectTrigger id="communicationStyle"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="direct">Direct</SelectItem><SelectItem value="supportive">Supportive</SelectItem><SelectItem value="analytical">Analytical</SelectItem><SelectItem value="expressive">Expressive</SelectItem></SelectContent></Select></div>
-              <div className="space-y-2"><Label htmlFor="isActive">Status</Label><Select value={String(formData.isActive)} onValueChange={(value) => handleSelectChange('isActive', value === 'true')}><SelectTrigger id="isActive"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="true">Active</SelectItem><SelectItem value="false">Inactive</SelectItem></SelectContent></Select></div>
+              <div className="space-y-2"><Label htmlFor="availability">Availability</Label><Select value={formData.availability} onValueChange={(value) => handleSelectChange('availability', value)}><SelectTrigger id="availability"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="always">Always</SelectItem><SelectItem value="weekdays">Weekdays</SelectItem><SelectItem value="weekends">Weekends</SelectItem></SelectContent></Select></div>
             </div>
           </div>
           <DialogFooter>
