@@ -27,11 +27,11 @@ const MissionsPage: React.FC = () => {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // const [currentPage, setCurrentPage] = useState(1);
-  // const [totalPages, setTotalPages] = useState(1);
+  const [currentPage] = useState(1);
+  const setTotalPages = (_: number) => {}; // Placeholder function
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [isSubmitting, setIsSubmitting] = useState(false);
+  const setIsSubmitting = (_: boolean) => {}; // Placeholder function
   const { toast } = useToast();
   
   const [formSteps, setFormSteps] = useState([{ title: '', description: '', completionCriteria: '' }]);
@@ -91,21 +91,6 @@ const MissionsPage: React.FC = () => {
         toast({ title: "Error", description: err.message || 'Failed to delete mission', variant: "destructive" });
       }
     }
-  };
-
-  const handleStepChange = (index: number, field: string, value: string) => {
-    const newSteps = [...formSteps];
-    newSteps[index][field] = value;
-    setFormSteps(newSteps);
-  };
-  
-  const addStep = () => {
-    setFormSteps([...formSteps, { title: '', description: '', completionCriteria: '' }]);
-  };
-
-  const removeStep = (index: number) => {
-    const newSteps = formSteps.filter((_, i) => i !== index);
-    setFormSteps(newSteps);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {

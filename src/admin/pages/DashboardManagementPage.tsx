@@ -43,7 +43,6 @@ interface Dashboard {
 const DashboardManagementPage: React.FC = () => {
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [selectedDashboard, setSelectedDashboard] = useState<Dashboard | null>(null);
-  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isAddWidgetModalOpen, setIsAddWidgetModalOpen] = useState(false);
@@ -62,7 +61,6 @@ const DashboardManagementPage: React.FC = () => {
 
   const fetchDashboards = async () => {
     try {
-      setLoading(true);
       setError(null);
       
       const response = await dashboardAPI.getAllDashboards();
@@ -74,8 +72,6 @@ const DashboardManagementPage: React.FC = () => {
     } catch (err: any) {
       console.error('Error fetching dashboards:', err);
       setError(err.message || 'Failed to fetch dashboards');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -112,7 +108,7 @@ const DashboardManagementPage: React.FC = () => {
         isDefault: dashboards.length === 0
       };
       
-      const response = await dashboardAPI.createDashboard(newDashboard);
+      await dashboardAPI.createDashboard(newDashboard);
       fetchDashboards();
     } catch (err: any) {
       console.error('Error creating dashboard:', err);

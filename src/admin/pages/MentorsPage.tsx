@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/use-toast";
 interface Mentor {
   _id: string;
   name: string;
+  title?: string;
   specialization: string;
   bio: string;
   profileImage?: string;
@@ -113,7 +114,7 @@ const MentorsPage: React.FC = () => {
   
   const openAddDialog = () => {
     setSelectedMentor(null);
-    setFormData({...initialFormData, careerField: careerFields[0]?._id});
+    setFormData({...initialFormData, careerFields: careerFields[0] ? [careerFields[0]] : []});
     setFormSkills('');
     setFormTags('');
     setFormLanguages('');
@@ -125,7 +126,7 @@ const MentorsPage: React.FC = () => {
     setFormData({ 
         ...initialFormData,
         ...mentor,
-        careerField: Array.isArray(mentor.careerFields) ? mentor.careerFields[0]?._id : mentor.careerFields,
+        careerFields: Array.isArray(mentor.careerFields) ? mentor.careerFields : [mentor.careerFields].filter(Boolean),
     });
     setFormSkills(Array.isArray(mentor.skills) ? mentor.skills.join(', ') : '');
     setFormTags(Array.isArray(mentor.tags) ? mentor.tags.join(', ') : '');
@@ -146,8 +147,8 @@ const MentorsPage: React.FC = () => {
   };
   
   const handleSubmit = async () => {
-    const { name, geminiMentorId, careerField, bio, specialization } = formData;
-    if (!name?.trim() || !geminiMentorId?.trim() || !careerField || !bio?.trim() || !specialization?.trim()) {
+    const { name, geminiMentorId, careerFields, bio, specialization } = formData;
+    if (!name?.trim() || !geminiMentorId?.trim() || !careerFields?.length || !bio?.trim() || !specialization?.trim()) {
       toast({ title: "Validation Error", description: "All fields marked with * are required.", variant: "destructive" });
       return;
     }
@@ -157,12 +158,11 @@ const MentorsPage: React.FC = () => {
     const payload = {
         ...formData,
         rating: Number(formData.rating) || 5,
-        careerFields: formData.careerField ? [formData.careerField] : [],
+        careerFields: formData.careerFields || [],
         skills: formSkills.split(',').map(skill => skill.trim()).filter(Boolean),
         tags: formTags.split(',').map(tag => tag.trim()).filter(Boolean),
         languages: formLanguages.split(',').map(lang => lang.trim()).filter(Boolean),
     };
-    delete payload.careerField;
 
     try {
       if (selectedMentor) {
@@ -240,7 +240,7 @@ const MentorsPage: React.FC = () => {
               <div className="space-y-2"><Label htmlFor="name">Name *</Label><Input id="name" name="name" value={formData.name} onChange={handleInputChange} /></div>
               <div className="space-y-2"><Label htmlFor="title">Title</Label><Input id="title" name="title" value={formData.title} onChange={handleInputChange} /></div>
             </div>
-            <div className="space-y-2"><Label htmlFor="careerField">Career Field *</Label><Select value={formData.careerField} onValueChange={(value) => handleSelectChange('careerField', value)}><SelectTrigger id="careerField"><SelectValue placeholder="Select a field..." /></SelectTrigger><SelectContent>{careerFields.map(field => (<SelectItem key={field._id} value={field._id}>{field.name}</SelectItem>))}</SelectContent></Select></div>
+            <div className="space-y-2"><Label htmlFor="careerFields">Career Field *</Label><Select value={formData.careerFields?.[0]?._id || ''} onValueChange={(value) => handleSelectChange('careerFields', value)}><SelectTrigger id="careerFields"><SelectValue placeholder="Select a field..." /></SelectTrigger><SelectContent>{careerFields.map(field => (<SelectItem key={field._id} value={field._id}>{field.name}</SelectItem>))}</SelectContent></Select></div>
             <div className="space-y-2"><Label htmlFor="specialization">Specialization *</Label><Input id="specialization" name="specialization" value={formData.specialization} onChange={handleInputChange} /></div>
             {/* FIXED: Renamed to geminiMentorId */}
             <div className="space-y-2"><Label htmlFor="geminiMentorId">Gemini AI Mentor ID *</Label><Input id="geminiMentorId" name="geminiMentorId" value={formData.geminiMentorId} onChange={handleInputChange} /></div>

@@ -168,7 +168,7 @@ const AnalyticsPage: React.FC = () => {
                     nameKey="feature"
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                   >
-                    {data.featureUsage.map((entry: any, index: number) => (
+                    {data.featureUsage.map((_: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -256,7 +256,7 @@ const AnalyticsPage: React.FC = () => {
                     nameKey="type"
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                   >
-                    {data.byType.map((entry: any, index: number) => (
+                    {data.byType.map((_: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -436,7 +436,7 @@ const AnalyticsPage: React.FC = () => {
                     nameKey="category"
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                   >
-                    {data.userDistribution.map((entry: any, index: number) => (
+                    {data.userDistribution.map((_: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

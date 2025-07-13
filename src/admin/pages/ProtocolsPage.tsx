@@ -27,8 +27,8 @@ const ProtocolsPage: React.FC = () => {
   const [protocols, setProtocols] = useState<Protocol[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage] = useState(1);
+  const setTotalPages = (_: number) => {}; // Placeholder function
   const [selectedProtocol, setSelectedProtocol] = useState<Protocol | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expandedProtocol, setExpandedProtocol] = useState<string | null>(null);
