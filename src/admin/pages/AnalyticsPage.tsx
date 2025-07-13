@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { analyticsAPI } from '../services/api';
-import { 
-  BarChart2, 
-  LineChart, 
-  PieChart, 
+import {
   Download,
   Calendar,
   RefreshCw

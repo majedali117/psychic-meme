@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { missionAPI } from '../services/api';
-import { Pencil, Trash2, Search, Plus, Filter, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Plus} from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 
 interface Mission {
@@ -27,11 +27,11 @@ const MissionsPage: React.FC = () => {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const [totalPages, setTotalPages] = useState(1);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
   const [formSteps, setFormSteps] = useState([{ title: '', description: '', completionCriteria: '' }]);

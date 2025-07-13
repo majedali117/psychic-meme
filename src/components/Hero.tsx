@@ -28,7 +28,7 @@ export default function Hero() {
           Journey to Your Future Career with Agentive Buddy
         </h1>
         <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto text-gray-300">
-          Harness the power of time-traveling AI mentors to accelerate your professional growth and avoid career pitfalls before they happen.
+          Harness the power of Agentive Buddies to accelerate your professional growth and avoid career pitfalls before they happen.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 text-lg rounded-full transition-all transform hover:scale-105">

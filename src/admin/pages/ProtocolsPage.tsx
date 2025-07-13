@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { protocolAPI } from '../services/api';
-import { Pencil, Trash2, Search, Plus, Filter, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Plus, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 
-interface Milestone {
-  title: string;
-  description: string;
-  order: number;
-}
+// interface Milestone {
+//   title: string;
+//   description: string;
+//   order: number;
+// }
 
 interface Protocol {
   _id: string;

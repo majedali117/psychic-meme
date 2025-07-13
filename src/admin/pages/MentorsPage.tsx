@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mentorAPI, careerFieldAPI } from '../services/api';
-import { Loader2, Plus, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, ChevronDown } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 
 // FIXED: Updated interface to match the complete AIMentor model from the provided JSON
