@@ -37,7 +37,7 @@ export default function TargetFields() {
         </h2>
         
         <p className="text-xl text-center mb-12 max-w-3xl mx-auto text-gray-300">
-          TimeTravelers focuses on five high-demand professional fields, providing specialized AI guidance for each career path.
+          Agentive Buddy focuses on five high-demand professional fields, providing specialized AI guidance for each career path.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

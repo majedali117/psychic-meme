@@ -5,7 +5,7 @@ export default function Testimonials() {
     {
       name: "Alex K.",
       role: "Software Developer",
-      quote: "TimeTravelers has completely transformed my career path. The AI Travelers identified skills I needed to develop that I never would have considered, and the mission structure kept me motivated and on track.",
+      quote: "Agentive Buddy has completely transformed my career path. The AI Travelers identified skills I needed to develop that I never would have considered, and the mission structure kept me motivated and on track.",
       avatar: "AK"
     },
     {

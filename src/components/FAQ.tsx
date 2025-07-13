@@ -8,8 +8,8 @@ import {
 export default function FAQ() {
   const faqs = [
     {
-      question: "Is TimeTravelers only for students and early career professionals?",
-      answer: "While our primary focus is on those early in their career journey, professionals at any stage can benefit from TimeTravelers, especially when considering career transitions or advancement."
+      question: "Is Agentive Buddy only for students and early career professionals?",
+      answer: "While our primary focus is on those early in their career journey, professionals at any stage can benefit from Agentive Buddy, especially when considering career transitions or advancement."
     },
     {
       question: "How accurate is the AI guidance compared to human mentors?",

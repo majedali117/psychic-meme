@@ -34,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, toggleCollapse }) => {
       <div className="flex items-center justify-between p-4 border-b border-gray-800">
         {!collapsed && (
           <Link to="/admin" className="text-xl font-bold text-purple-400">
-            TimeTravelers
+            Agentive Buddy
           </Link>
         )}
         <button 

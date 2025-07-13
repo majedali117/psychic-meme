@@ -1,8 +1,8 @@
-# TimeTravelers Admin Panel Documentation
+# Agentive Buddy Admin Panel Documentation
 
 ## Overview
 
-The TimeTravelers Admin Panel is a comprehensive web-based interface for managing the TimeTravelers career guidance platform. This documentation provides detailed information on the implementation, features, and usage of the admin panel.
+The Agentive Buddy Admin Panel is a comprehensive web-based interface for managing the Agentive Buddy career guidance platform. This documentation provides detailed information on the implementation, features, and usage of the admin panel.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ The TimeTravelers Admin Panel is a comprehensive web-based interface for managin
 
 ## Implementation Summary
 
-The TimeTravelers Admin Panel has been successfully implemented with the following enhancements:
+The Agentive Buddy Admin Panel has been successfully implemented with the following enhancements:
 
 - **Complete Mentors Management**: Added a comprehensive interface for managing AI mentors
 - **File Upload Functionality**: Implemented secure file upload for mentor avatars and other assets
@@ -82,11 +82,11 @@ All features have been thoroughly tested and validated against the backend API, 
 ### Prerequisites
 - Node.js 16.x or higher
 - npm 8.x or higher
-- TimeTravelers backend API running (default: http://localhost:5000/api/v1)
+- Agentive Buddy backend API running (default: http://localhost:5000/api/v1)
 
 ### Setup Instructions
 
-1. Extract the TimeTravelers admin panel files to your desired location
+1. Extract the Agentive Buddy admin panel files to your desired location
 2. Navigate to the project directory:
    ```bash
    cd timetravelers
@@ -115,7 +115,7 @@ All features have been thoroughly tested and validated against the backend API, 
 
 ### API Endpoint
 
-The admin panel connects to the TimeTravelers backend API. To configure the API endpoint:
+The admin panel connects to the Agentive Buddy backend API. To configure the API endpoint:
 
 1. Open `src/admin/services/api.ts`
 2. Modify the `API_BASE_URL` constant:
@@ -183,7 +183,7 @@ REACT_APP_AUTH_TOKEN_KEY=admin_token
 
 ## API Integration
 
-The admin panel integrates with the TimeTravelers backend API using the following services:
+The admin panel integrates with the Agentive Buddy backend API using the following services:
 
 ### Authentication API
 - `login(email, password)`: Authenticate admin user
@@ -301,4 +301,4 @@ src/admin/
 - Console tab for JavaScript errors
 - Application tab to inspect local storage and cookies
 
-For additional support, please contact the TimeTravelers development team.
+For additional support, please contact the Agentive Buddy development team.

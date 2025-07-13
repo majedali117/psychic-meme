@@ -28,7 +28,7 @@ const AdminLayout: React.FC = () => {
         </main>
         
         <footer className="p-4 text-center text-gray-500 text-sm">
-          &copy; {new Date().getFullYear()} TimeTravelers Admin Panel
+          &copy; {new Date().getFullYear()} Agentive Buddy Admin Panel
         </footer>
       </div>
       <Toaster />

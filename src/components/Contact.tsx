@@ -12,7 +12,7 @@ export default function Contact() {
         
         <div className="max-w-3xl mx-auto">
           <p className="text-center text-gray-300 mb-8">
-            Have questions about TimeTravelers? We'd love to hear from you!
+            Have questions about Agentive Buddy? We'd love to hear from you!
           </p>
           
           <form className="space-y-6">
@@ -70,10 +70,10 @@ export default function Contact() {
           
           <div className="mt-12 text-center">
             <p className="text-gray-300">
-              Email: <a href="mailto:info@timetravelers.ai" className="text-purple-400 hover:text-purple-300">info@timetravelers.ai</a>
+              Email: <a href="mailto:info@agentivebuddy.com" className="text-purple-400 hover:text-purple-300">info@agentivebuddy.com</a>
             </p>
             <p className="text-gray-300 mt-2">
-              Follow us: <a href="#" className="text-purple-400 hover:text-purple-300">@TimeTravelersAI</a>
+              Follow us: <a href="#" className="text-purple-400 hover:text-purple-300">@Agentive Buddy</a>
             </p>
           </div>
         </div>

@@ -186,7 +186,7 @@ const MentorsPage: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>AI Mentors Management</CardTitle>
-          <CardDescription>Manage AI mentors for the TimeTravelers platform</CardDescription>
+          <CardDescription>Manage AI mentors for the Agentive Buddy platform</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex justify-between items-center mb-6"><Button onClick={openAddDialog}><Plus className="h-4 w-4 mr-2" />Add Mentor</Button></div>

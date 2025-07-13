@@ -36,7 +36,7 @@ const LoginPage: React.FC = () => {
       <div className="max-w-md w-full space-y-8 p-8 bg-gray-900 rounded-lg shadow-lg">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-            TimeTravelers Admin
+            Agentive Buddy Admin
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
             Sign in to access the admin panel

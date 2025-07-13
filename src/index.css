@@ -26,7 +26,7 @@ body {
     rgb(var(--background-start-rgb));
 }
 
-/* Custom styles for TimeTravelers */
+/* Custom styles for Agentive Buddy */
 .hero-gradient {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
 }

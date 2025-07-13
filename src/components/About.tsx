@@ -3,12 +3,12 @@ export default function About() {
     <section id="about" className="py-20 bg-gray-900 text-white">
       <div className="container mx-auto px-4">
         <h2 className="text-4xl font-bold mb-12 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-          The TimeTravelers Concept
+          The Agentive Buddy Concept
         </h2>
         
         <div className="max-w-4xl mx-auto">
           <p className="text-lg mb-6 text-gray-300">
-            TimeTravelers is a revolutionary career guidance mobile application inspired by the Netflix series "Travelers." Our platform creates a unique ecosystem where advanced AI personas ("Travelers") embody the expertise and experience of professionals from various career stages to guide students and early career professionals ("Hosts") through the challenges of career development.
+            Agentive Buddy is a revolutionary career guidance mobile application inspired by the Netflix series "Travelers." Our platform creates a unique ecosystem where advanced AI personas ("Travelers") embody the expertise and experience of professionals from various career stages to guide students and early career professionals ("Hosts") through the challenges of career development.
           </p>
           
           <p className="text-lg mb-6 text-gray-300">

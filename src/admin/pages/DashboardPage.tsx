@@ -104,7 +104,7 @@ const DashboardPage: React.FC = () => {
     <div>
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-gray-400 mt-1">Welcome to the TimeTravelers admin panel</p>
+        <p className="text-gray-400 mt-1">Welcome to the Agentive Buddy admin panel</p>
       </div>
 
       {error && (
